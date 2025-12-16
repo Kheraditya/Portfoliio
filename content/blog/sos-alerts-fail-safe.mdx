@@ -1,0 +1,162 @@
+---
+title: "Designing Fail-Safe SOS Alerts (SMS + Push + Email)"
+date: "2025-12-15"
+summary: "How I designed a reliable SOS alert system using multi-channel dispatch, fallbacks, idempotency, and an admin control plane."
+tags:
+  [
+    "System Design",
+    "React Native",
+    "Firebase",
+    "Reliability",
+    "Mobile Architecture",
+  ]
+---
+
+## Reliability _is_ the Feature 🚨
+
+When you’re building a safety feature, **reliability is not optional — it _is_ the feature**.
+
+This post breaks down how I designed a **fail-safe SOS alert system** for my Women Safety app so it still works under:
+
+- poor network,
+- panic-driven double taps,
+- partial channel failures.
+
+---
+
+## 1️⃣ High-Level SOS Flow
+
+![SOS Alert High-Level Flow](/images/blog/sos-flow.svg)
+
+<ArchitectureNote title="SOS Lifecycle">
+  One tap → capture context → idempotent incident → multi-channel dispatch →
+  audit + admin closure
+</ArchitectureNote>
+
+---
+
+## 2️⃣ SOS Payload (What We Send)
+
+````ts
+type SOSPayload = {
+  userId: string;
+  timestamp: string;
+  location?: {
+    latitude: number;
+
+
+Push is fast when internet cooperates — but safety flows can’t depend on “ideal conditions”.
+
+Push (FCM): instant in good network
+
+SMS: often survives low-network scenarios better
+
+Email: audit + verification
+
+```ts
+function dispatchNotifications(incident) {
+  const result: any = {};
+
+  if (incident.channels.pushEnabled) {
+    result.push = sendPushNotification(incident);
+  }
+
+  if (result.push?.failed || incident.channels.smsEnabled) {
+    result.sms = sendSMS(incident);
+  }
+
+  if (incident.channels.emailEnabled) {
+    result.email = sendEmail(incident);
+  }
+
+  logDispatchResult(incident.id, result);
+}
+````
+
+<Callout type="success">
+  Controlled fallback (not “fire everything blindly”) + audit logs per channel.
+</Callout>
+
+### 5️⃣ Idempotency Guard (Double-tap Protection)
+
+```ts
+function isDuplicateEvent(sosEventId) {
+  const existing = findIncidentByEventId(sosEventId);
+
+  if (existing && existing.createdAt < NOW - DUPLICATE_WINDOW) {
+    return false;
+  }
+
+  return Boolean(existing);
+}
+```
+
+### 6️⃣ Failure Timeline (Graceful Degradation)
+
+<ArchitectureNote title="Key idea">
+  Even if push fails, the incident still progresses via SMS/email. No silent
+  failures.
+</ArchitectureNote>
+
+### 7️⃣ Admin Dashboard: Closing the Loop
+
+Alerts without visibility are dangerous.
+
+Admin control plane:
+
+- Live incident queue
+- Acknowledge / Resolve
+- Audit logs
+
+```ts
+function updateIncidentStatus(incidentId, action) {
+  const incident = getIncident(incidentId);
+
+  if (action === "ACKNOWLEDGE") {
+    incident.status = "ACKNOWLEDGED";
+  }
+
+  if (action === "RESOLVE") {
+    incident.status = "RESOLVED";
+  }
+
+  incident.updatedAt = now();
+  saveIncident(incident);
+
+  auditLog(incidentId, action);
+}
+```
+
+<Callout type="info">
+  This creates operational accountability: who responded, when, and what the
+  current state is.
+</Callout>
+
+### 8️⃣ Edge Cases Considered
+
+- Location permission denied → fallback to last known location
+- Poor network → SMS delivery path
+- Partial failures → log and continue
+- Duplicate triggers → idempotent updates
+
+### 9️⃣ What I’d Improve Next
+
+- Rate limiting (misuse prevention)
+- Channel-level metrics (success %, latency)
+- SLA dashboards (average acknowledge time)
+- Escalation policies (notify more contacts if unacknowledged)
+
+Final Thoughts 🧠
+
+Safety systems must degrade gracefully, not fail silently.
+
+This design combines:
+
+- multi-channel delivery,
+- idempotency,
+- observability,
+- and an admin control plane.
+
+That’s what turns a demo into a production feature.
+
+---

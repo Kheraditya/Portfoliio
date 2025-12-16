@@ -1,0 +1,52 @@
+---
+title: "Slashing Query Latency by 95%: The Power of Composite Indexes"
+date: "2024-03-10"
+summary: "How we optimized a critical analytical query from 12 seconds to 600ms by understanding B-Tree internals and composite indexing."
+tags: ["Database", "SQL", "Performance", "PostgreSQL", "Backend"]
+---
+
+We recently faced a critical performance issue: our main "Transactions Dashboard" was taking **12+ seconds** to load for enterprise clients.
+
+## The Slow Query
+
+The culprit was a query filtering millions of records by `merchant_id`, `status`, and sorting by `created_at`.
+
+```sql
+SELECT * FROM transactions 
+WHERE merchant_id = '123' 
+AND status = 'SUCCESS' 
+ORDER BY created_at DESC 
+LIMIT 50;
+```
+
+Despite having individual indexes on `merchant_id` and `created_at`, the database was performing a **Bitmap Heap Scan**, effectively merging two large index results in memory, which is slow for high-cardinality data.
+
+## Understanding the B-Tree
+
+Databases read composite indexes from left to right. An index on `(A, B)` can satisfy queries for `A` and `A+B`, but not just `B`.
+
+<ArchitectureNote title="The Golden Rule of Indexing">
+  Use the **Equality, Sort, Range** rule. Columns used for equality comparisons should come first, followed by the sort column.
+</ArchitectureNote>
+
+## The Fix: A Composite Index
+
+We created a specific composite index tailored to this access pattern:
+
+```sql
+CREATE INDEX idx_merchant_status_date 
+ON transactions (merchant_id, status, created_at DESC);
+```
+
+### Why this works
+1.  **Merchant ID**: Quickly narrows down to the specific client's data partition.
+2.  **Status**: Further filters that partition to only successful transactions.
+3.  **Created At**: The resulting data is *already sorted* in the index tree. The database can simply grab the top 50 records and stop.
+
+## Results
+
+<Callout type="success">
+  Query time dropped from **12.4s** to **0.6s** (95% reduction). CPU usage on the primary DB instance dropped by 40%.
+</Callout>
+
+This taught us that adding more indexes indiscriminately isn't the answer. Understanding **how** the database traverses its data structures is the key to performant engineering.

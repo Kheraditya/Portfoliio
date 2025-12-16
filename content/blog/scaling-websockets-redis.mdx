@@ -1,0 +1,69 @@
+---
+title: "Scaling Real-time Chat to 1 Million Users: Redis & WebSockets"
+date: "2024-02-15"
+summary: "A deep dive into horizontally scaling stateful WebSocket connections using Redis Pub/Sub as a message broker."
+tags: ["System Design", "Redis", "WebSockets", "Node.js", "Scalability"]
+---
+
+Scaling HTTP requests is straightforward: spin up more instances and put a load balancer in front. But how do you scale stateful connections like WebSockets?
+
+When a user connects to **Server A**, that server holds the connection. If user B sends a message to **Server B**, how does it reach user A?
+
+## The Problem: Siloed Connections
+
+In a naïve implementation, servers don't know about each other's connections.
+
+<ArchitectureNote title="The Disconnected State">
+  User A (on Server 1) cannot receive messages from User B (on Server 2) because the servers share no state.
+</ArchitectureNote>
+
+## The Solution: Pub/Sub Messaging
+
+We solved this by introducing **Redis Pub/Sub** as a central message broker. Every application server subscribes to a specific Redis channel.
+
+### Architecture Overview
+
+1.  **User A** connects to **Server 1**.
+2.  **User B** connects to **Server 2**.
+3.  User B sends a message destined for User A.
+4.  **Server 2** publishes the event to Redis: `PUBLISH chat-channel { to: "UserA", msg: "Hello" }`.
+5.  **All Servers** receive this event.
+6.  **Server 1** checks if it holds the connection for "UserA" and pushes the message down the WebSocket.
+
+```typescript
+// subscribe.ts
+import Redis from "ioredis";
+
+const sub = new Redis(process.env.REDIS_URL);
+const pub = new Redis(process.env.REDIS_URL);
+
+// Subscribe to global chat channel
+sub.subscribe("chat-messages", (err, count) => {
+  if (err) console.error("Failed to subscribe: %s", err.message);
+});
+
+sub.on("message", (channel, message) => {
+  const { toUserId, content } = JSON.parse(message);
+  
+  // Only send if this specific server holds the connection
+  if (connectedClients.has(toUserId)) {
+    connectedClients.get(toUserId).send(content);
+  }
+});
+```
+
+Using this pattern, we effectively decoupled the **sender** from the **receiver** location.
+
+## Challenges at Scale
+
+While this works perfectly for thousands of users, at **1 million concurrent users**, the "broadcast to all servers" approach becomes a bottleneck. Every server receiving every message consumes massive CPU interrupt time.
+
+### Optimization: Sharded Channels
+
+Instead of one global `chat-messages` channel, we sharded channels based on `userId`.
+
+<Callout type="success">
+  **Key optimization**: Server 1 only subscribes to channels relevant to the users securely connected to it, drastically reducing unnecessary network traffic and CPU load.
+</Callout>
+
+This reduced our Redis CPU usage by **60%** and allowed us to scale linearly by simply adding more Node.js instances.

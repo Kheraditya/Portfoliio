@@ -1,0 +1,71 @@
+---
+title: "Handling Double Payments: Idempotency in Distributed Systems"
+date: "2024-04-05"
+summary: "Designing a robust payment processing system that guarantees exactly-once execution using idempotency keys."
+tags: ["Distributed Systems", "Payments", "Architecture", "API Design"]
+---
+
+In distributed systems, network failures are inevitable. A client might send a request to charge a user, the server processes it, but the response gets lost on the way back.
+
+The client, thinking the request failed, retries. **Result: The user gets charged twice.**
+
+## What is Idempotency?
+
+Idempotency simply means that making the same request multiple times produces the same result as making it once.
+
+Mathematically: `f(f(x)) = f(x)`
+
+## Implementing Idempotency Keys
+
+To solve the double-charge problem, we introduced an **Idempotency-Key** header in our API.
+
+<ArchitectureNote title="Request Lifecycle">
+  1. Client generates a unique UUID (`idemp_key`).
+  2. Client sends request: `POST /charge` with header `Idempotency-Key: uuid`.
+  3. Server checks if it has seen this key before.
+</ArchitectureNote>
+
+### The Implementation Logic
+
+We use a distinct "idempotency store" (Redis with persistence or a separate SQL table) to track these keys.
+
+```typescript
+async function handlePayment(req, res) {
+  const key = req.headers['idempotency-key'];
+  
+  // 1. Check if we've processed this
+  const cachedResponse = await getIdempotencyRecord(key);
+  if (cachedResponse) {
+    return res.status(cachedResponse.status).json(cachedResponse.body);
+  }
+
+  // 2. Lock the key (prevent race conditions)
+  await lockKey(key);
+
+  try {
+    // 3. Process the actual complex payment logic
+    const paymentResult = await paymentProvider.charge(req.body);
+
+    // 4. Save the successful response
+    await saveIdempotencyRecord(key, {
+      status: 200,
+      body: paymentResult
+    });
+
+    return res.status(200).json(paymentResult);
+  } catch (error) {
+    await unlockKey(key);
+    throw error;
+  }
+}
+```
+
+## Atomic Operations & Race Conditions
+
+A naive check-then-set approach is dangerous. If two requests with the same key arrive simultaneously, they might both pass the "check" and execute twice.
+
+<Callout type="warning">
+  **Critical**: You must use atomic operations (like database unique constraints or Redis `SETNX`) to reserve the key before processing.
+</Callout>
+
+By enforcing this pattern, we ensure that no matter how many times a client (or a webhook) retries a request, the side effect (charging money) happens exactly once.

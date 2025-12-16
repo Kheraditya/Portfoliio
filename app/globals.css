@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+}
+::selection {
+  @apply bg-fuchsia-500/30;
+}
+
+.grain:before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  z-index: 50;
+}
+
+a {
+  @apply text-zinc-100 underline-offset-4;
+}
+.prose a {
+  text-decoration: underline;
+}
+
+/* GitHub heatmap color classes used by react-calendar-heatmap
+   Use SVG `fill` so colors apply to <rect> elements inside the SVG. */
+.react-calendar-heatmap rect.color-empty {
+  fill: transparent !important;
+  stroke: #0b1220;
+  opacity: 0.35;
+}
+.react-calendar-heatmap rect.color-git-1 {
+  fill: #153f2a !important;
+}
+.react-calendar-heatmap rect.color-git-2 {
+  fill: #1e6f3f !important;
+}
+.react-calendar-heatmap rect.color-git-3 {
+  fill: #2aa65a !important;
+}
+.react-calendar-heatmap rect.color-git-4 {
+  fill: #5be185 !important;
+}
+
+/* Slightly rounded squares for better visuals */
+.react-calendar-heatmap rect {
+  rx: 3;
+}

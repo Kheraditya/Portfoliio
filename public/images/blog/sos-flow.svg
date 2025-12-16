@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640">
+  <defs>
+    <style>
+      .bg{fill:#0b1020}
+      .card{fill:#101a33;stroke:#2a3a6a;stroke-width:2}
+      .text{fill:#e8eefc;font-family:Inter,ui-sans-serif,system-ui; font-size:18px}
+      .sub{fill:#a9b7e6;font-family:Inter,ui-sans-serif,system-ui; font-size:14px}
+      .title{fill:#ffffff;font-family:Inter,ui-sans-serif,system-ui; font-size:26px; font-weight:700}
+      .arrow{stroke:#7aa2ff; stroke-width:3; fill:none; marker-end:url(#m)}
+      .muted{stroke:#334b86}
+      .pill{fill:#1a2a55;stroke:#334b86;stroke-width:2}
+    </style>
+    <marker id="m" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#7aa2ff"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="640"/>
+  <text class="title" x="50" y="70">SOS Alert High-Level Flow (Fail-safe: Push + SMS + Email)</text>
+  <text class="sub" x="50" y="102">One tap → capture context → idempotent incident → multi-channel dispatch → audit + admin closure</text>
+
+  <!-- Nodes -->
+  <rect class="card" x="70" y="160" rx="18" ry="18" width="260" height="120"/>
+  <text class="text" x="105" y="205">Mobile App</text>
+  <text class="sub"  x="105" y="235">Tap SOS</text>
+  <text class="sub"  x="105" y="258">Capture: userId, ts, loc</text>
+
+  <rect class="card" x="420" y="140" rx="18" ry="18" width="300" height="160"/>
+  <text class="text" x="455" y="185">Backend API</text>
+  <text class="sub"  x="455" y="215">Idempotency check</text>
+  <text class="sub"  x="455" y="238">Create Incident (NEW)</text>
+  <text class="sub"  x="455" y="261">Dispatch Orchestrator</text>
+
+  <rect class="card" x="820" y="90" rx="18" ry="18" width="310" height="120"/>
+  <text class="text" x="855" y="135">Push Service (FCM)</text>
+  <text class="sub"  x="855" y="165">Fast when internet OK</text>
+
+  <rect class="card" x="820" y="240" rx="18" ry="18" width="310" height="120"/>
+  <text class="text" x="855" y="285">SMS Gateway</text>
+  <text class="sub"  x="855" y="315">Fallback / critical contacts</text>
+
+  <rect class="card" x="820" y="390" rx="18" ry="18" width="310" height="120"/>
+  <text class="text" x="855" y="435">Email Service</text>
+  <text class="sub"  x="855" y="465">Audit + confirmation trail</text>
+
+  <rect class="card" x="420" y="360" rx="18" ry="18" width="300" height="160"/>
+  <text class="text" x="455" y="405">Incident Store</text>
+  <text class="sub"  x="455" y="435">Incident + delivery logs</text>
+  <text class="sub"  x="455" y="458">Status: NEW → ACK → RES</text>
+
+  <rect class="card" x="70" y="370" rx="18" ry="18" width="260" height="150"/>
+  <text class="text" x="105" y="415">Admin Dashboard</text>
+  <text class="sub"  x="105" y="445">Queue + actions</text>
+  <text class="sub"  x="105" y="468">ACKNOWLEDGE / RESOLVE</text>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M330 220 C365 220 380 220 420 220"/>
+  <path class="arrow" d="M570 300 C570 325 570 335 570 360"/>
+  <path class="arrow" d="M720 190 C770 165 790 150 820 150"/>
+  <path class="arrow" d="M720 220 C770 255 790 275 820 300"/>
+  <path class="arrow" d="M720 250 C770 360 790 420 820 450"/>
+  <path class="arrow" d="M330 445 C365 445 380 445 420 445"/>
+
+  <!-- Pills -->
+  <rect class="pill" x="440" y="310" rx="999" ry="999" width="260" height="34"/>
+  <text class="sub" x="458" y="333">Retry + fallback + audit</text>
+
+  <rect class="pill" x="840" y="540" rx="999" ry="999" width="290" height="34"/>
+  <text class="sub" x="858" y="563">No silent failures</text>
+</svg>

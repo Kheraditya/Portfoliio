@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="300" viewBox="0 0 1100 300">
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06b6d4" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0.20"/>
+    </linearGradient>
+  </defs>
+  <rect width="1100" height="300" fill="#09090b"/>
+  <rect x="20" y="20" width="1060" height="260" rx="28" fill="url(#g2)" stroke="#27272a"/>
+  <text x="46" y="64" font-family="ui-monospace, Menlo, Monaco, Consolas, monospace" font-size="20" fill="#fafafa">Leading as a Fresher – My Delivery Playbook</text>
+  <line x1="90" y1="150" x2="1010" y2="150" stroke="#e4e4e7" stroke-width="3" opacity="0.7"/>
+  <circle cx="90.0" cy="150" r="12" fill="#09090b" stroke="#e4e4e7" stroke-width="3"/>
+  <text x="90.0" y="126" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="14" fill="#fafafa">Week 1</text>
+  <text x="90.0" y="184" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="12" fill="#d4d4d8">clarify scope</text>
+
+  <circle cx="396.6666666666667" cy="150" r="12" fill="#09090b" stroke="#e4e4e7" stroke-width="3"/>
+  <text x="396.6666666666667" y="126" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="14" fill="#fafafa">Week 2</text>
+  <text x="396.6666666666667" y="184" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="12" fill="#d4d4d8">plan & slice</text>
+
+  <circle cx="703.3333333333334" cy="150" r="12" fill="#09090b" stroke="#e4e4e7" stroke-width="3"/>
+  <text x="703.3333333333334" y="126" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="14" fill="#fafafa">Week 3</text>
+  <text x="703.3333333333334" y="184" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="12" fill="#d4d4d8">ship MVP</text>
+
+  <circle cx="1010.0" cy="150" r="12" fill="#09090b" stroke="#e4e4e7" stroke-width="3"/>
+  <text x="1010.0" y="126" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="14" fill="#fafafa">Week 4+</text>
+  <text x="1010.0" y="184" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Arial" font-size="12" fill="#d4d4d8">iterate + harden</text>
+</svg>
